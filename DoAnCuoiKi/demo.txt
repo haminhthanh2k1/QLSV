@@ -1,0 +1,8 @@
+n19,d19,teo,04/04/2001,nam,0,1
+j97,ctdl,null
+d20,n20,teoo,02/03/2001,nữ,2,5
+d20,n39,teoo,02/03/2001,nữ,2,5
+m2,m22,uan,02/04/2000,nam,2,3
+D17,N17,Khanh,01/01/1999,Nam,0,1
+A01,CTDL,null
+J02,C++,null

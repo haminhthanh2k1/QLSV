@@ -1,0 +1,159 @@
+package QuanLiSinhVien;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.LocalDate;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+
+public class QuanLySinhVien {
+    private List<SinhVien> danhSachSinhVien;
+
+    public QuanLySinhVien() {
+        this.danhSachSinhVien = new ArrayList<>();
+    }
+
+    public List<SinhVien> getDanhSachSinhVien() {
+        return danhSachSinhVien;
+    }
+// hàm kiểm tra msv
+    public boolean kiemTraMaSV(String maSV) {
+        for (SinhVien sv : danhSachSinhVien) {
+            if (sv.getMaSV().equalsIgnoreCase(maSV)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public void themSinhVien(SinhVien sinhVien) {
+        if (!kiemTraMaSV(sinhVien.getMaSV())) {
+            danhSachSinhVien.add(sinhVien);
+        } else {
+            System.out.println("Mã sinh viên đã tồn tại.");
+        }
+    }
+
+    public SinhVien timSinhVien(String maSV) {
+        for (SinhVien sv : danhSachSinhVien) {
+            if (sv.getMaSV().equalsIgnoreCase(maSV)) {
+                return sv;
+            }
+        }
+        return null; // Return null if not found
+    }
+
+    public void xoaSinhVien(String maSV) {
+        SinhVien sv = timSinhVien(maSV);
+        if (sv != null) {
+            danhSachSinhVien.remove(sv);
+        }
+    }
+
+    public void suaSinhVien(SinhVien sinhVien) {
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            if (sv.getMaSV().equalsIgnoreCase(sinhVien.getMaSV())) {
+                danhSachSinhVien.set(i, sinhVien);
+                break;
+            }
+        }
+    }
+
+    private static void ghiDanhSachSinhVienVaoFile(String filePath) {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            // Ghi tiêu đề cột
+            writer.write(String.format("STT,Lớp,Mã Sinh Viên,Tên Sinh Viên,Ngày Sinh,Giới Tính,Số Điện Thoại,Email,Mã Môn Học,Tên Môn Học,Điểm%n"));
+            
+            for (int i = 0; i < danhSachSinhVien.size(); i++) {
+                SinhVien sv = danhSachSinhVien.get(i);
+                String ngaySinhStr = sv.getNgaySinh() != null ? sv.getNgaySinh().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "N/A";
+                
+                List<MonHoc> danhSachMonHoc = sv.getDanhSachMonHoc();
+                if (danhSachMonHoc.isEmpty()) {
+                    // Ghi thông tin sinh viên và không có môn học
+                    writer.write(String.format("%d,%s,%s,%s,%s,%s,%s,%s,N/A,N/A,null%n",
+                            i + 1,
+                            sv.getLop(),
+                            sv.getMaSV(),
+                            sv.getHoTen(),
+                            ngaySinhStr,
+                            sv.getGioiTinh(),
+                            sv.getSoDienThoai(),
+                            sv.getEmail()
+                    ));
+                } else {
+                    // Ghi thông tin sinh viên với môn học đầu tiên
+                    MonHoc mh = danhSachMonHoc.get(0);
+                    String maMonHoc = mh.getMaMonHoc();
+                    String tenMonHoc = mh.getTenMonHoc();
+                    String diem = mh.getDiem() != null ? mh.getDiem().toString() : "null";
+
+                    writer.write(String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                            i + 1,
+                            sv.getLop(),
+                            sv.getMaSV(),
+                            sv.getHoTen(),
+                            ngaySinhStr,
+                            sv.getGioiTinh(),
+                            sv.getSoDienThoai(),
+                            sv.getEmail(),
+                            maMonHoc,
+                            tenMonHoc,
+                            diem
+                    ));
+
+                    // Ghi các môn học còn lại
+                    for (int j = 1; j < danhSachMonHoc.size(); j++) {
+                        MonHoc mh2 = danhSachMonHoc.get(j);
+                        String diemStr = mh2.getDiem() != null ? mh2.getDiem().toString() : "null";
+                        writer.write(String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                mh2.getMaMonHoc(),
+                                mh2.getTenMonHoc(),
+                                diemStr
+                        ));
+                    }
+                }
+            }
+            
+            System.out.println("Dữ liệu đã được ghi vào file thành công.");
+        } catch (IOException e) {
+            System.out.println("Lỗi khi ghi vào file: " + e.getMessage());
+        }
+    }
+    public void docDanhSachSinhVienTuFile(String tenFile) {
+        danhSachSinhVien.clear(); // Xóa danh sách hiện tại trước khi đọc từ file
+        try (BufferedReader br = new BufferedReader(new FileReader(tenFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 7) {
+                    String lop = parts[0].trim();
+                    String maSV = parts[1].trim();
+                    String hoTen = parts[2].trim();
+                    LocalDate ngaySinh = LocalDate.parse(parts[3].trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    String gioiTinh = parts[4].trim();
+                    String soDienThoai = parts[5].trim();
+                    String email = parts[6].trim();
+
+                    SinhVien sinhVien = new SinhVien(lop, maSV, hoTen, ngaySinh, gioiTinh, soDienThoai, email);
+                    danhSachSinhVien.add(sinhVien);
+                }
+            }
+            System.out.println("Đã đọc dữ liệu từ file " + tenFile);
+        } catch (IOException e) {
+            System.out.println("Lỗi khi đọc file: " + e.getMessage());
+        }
+    }
+
+}

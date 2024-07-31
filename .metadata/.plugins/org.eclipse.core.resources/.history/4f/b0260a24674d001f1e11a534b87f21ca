@@ -1,0 +1,402 @@
+package QuanLiSinhVien;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final QuanLySinhVien quanLySinhVien = new QuanLySinhVien();
+    private static final String FILE_NAME;
+    
+    public static void main(String[] args) {
+    	quanLySinhVien.docDanhSachSinhVienTuFile(FILE_NAME);
+        boolean tiepTuc = true;
+        while (tiepTuc) {
+            hienThiMenu();
+            int luaChon = scanner.nextInt();
+            scanner.nextLine(); // consume newline character after nextInt()
+
+            switch (luaChon) {
+                case 1:
+                    themSinhVien();
+                    break;
+                case 2:
+                    nhapMonHocChoSinhVien();
+                    break;
+                case 3:
+                    nhapDiemChoSinhVien();
+                    break;
+                case 4:
+                    hienThiDanhSachSinhVien();
+                    break;
+                case 5:
+                    xoaSinhVien();
+                    break;
+                case 6:
+                    suaSinhVien();
+                    break;
+                case 7:
+                    ghiDanhSachSinhVienVaoFile();
+                    break;
+                case 8:
+                	docDanhSachSinhVienTuFile();
+                    break;
+                case 9:
+                    tiepTuc = false;
+                    break;
+                default:
+                    System.out.println("Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                    break;
+            }
+        }
+        scanner.close();
+    }
+
+    private static void hienThiMenu() {
+        System.out.println("\nCHƯƠNG TRÌNH QUẢN LÝ SINH VIÊN");
+        System.out.println("1. Thêm sinh viên");
+        System.out.println("2. Nhập môn học cho sinh viên");
+        System.out.println("3. Nhập điểm cho sinh viên");
+        System.out.println("4. Xem danh sách sinh viên");
+        System.out.println("5. Xóa sinh viên");
+        System.out.println("6. Sửa sinh viên và xóa môn học");
+        System.out.println("7. Ghi vào file");
+        System.out.println("8. Đọc từ file");
+        System.out.println("9. Thoát");
+        System.out.print("Chọn chức năng (1-9): ");
+    }
+
+    private static void themSinhVien() {
+        System.out.println("\nTHÊM SINH VIÊN");
+
+        System.out.print("Nhập lớp: ");
+        String lop = scanner.nextLine();
+
+        String maSV;
+        while (true) {
+            System.out.print("Nhập mã sinh viên: ");
+            maSV = scanner.nextLine();
+            if (quanLySinhVien.timSinhVien(maSV) == null) {
+                break; // Nếu mã sinh viên không trùng, thoát vòng lặp
+            } else {
+                System.out.println("Mã sinh viên đã tồn tại. Vui lòng nhập mã sinh viên khác.");
+            }
+        }
+
+        System.out.print("Nhập họ tên sinh viên: ");
+        String hoTen = scanner.nextLine();
+
+        LocalDate ngaySinh = null;
+        while (ngaySinh == null) {
+            try {
+                System.out.print("Nhập ngày sinh (yyyy-MM-dd): ");
+                String ngaySinhStr = scanner.nextLine();
+                ngaySinh = LocalDate.parse(ngaySinhStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            } catch (Exception e) {
+                System.out.println("Định dạng ngày không hợp lệ. Vui lòng nhập lại.");
+            }
+        }
+
+        System.out.print("Nhập giới tính: ");
+        String gioiTinh = scanner.nextLine();
+
+        String soDienThoai;
+        while (true) {
+            System.out.print("Nhập số điện thoại: ");
+            soDienThoai = scanner.nextLine();
+            if (!soDienThoai.isEmpty()) {
+                break;
+            } else {
+                System.out.println("Số điện thoại không được để trống.");
+            }
+        }
+
+        String email;
+        while (true) {
+            System.out.print("Nhập email: ");
+            email = scanner.nextLine();
+            if (!email.isEmpty()) {
+                break;
+            } else {
+                System.out.println("Email không được để trống.");
+            }
+        }
+
+        SinhVien sinhVien = new SinhVien(lop, maSV, hoTen, ngaySinh, gioiTinh, soDienThoai, email);
+        quanLySinhVien.themSinhVien(sinhVien);
+        System.out.println("Đã thêm sinh viên thành công.");
+    }
+
+    private static void nhapMonHocChoSinhVien() {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        if (danhSachSinhVien.isEmpty()) {
+            System.out.println("Không có sinh viên nào trong danh sách.");
+            return;
+        }
+
+        System.out.println("\nDanh sách sinh viên:");
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            System.out.println((i + 1) + ". " + sv.getHoTen() + " - " + sv.getMaSV() + " - " + sv.getLop());
+        }
+
+        System.out.print("Chọn số thứ tự sinh viên để nhập môn học: ");
+        int index = scanner.nextInt() - 1;
+        scanner.nextLine(); // Consume newline left-over
+
+        if (index < 0 || index >= danhSachSinhVien.size()) {
+            System.out.println("Lựa chọn không hợp lệ.");
+            return;
+        }
+
+        SinhVien sinhVien = danhSachSinhVien.get(index);
+        System.out.println("Nhập môn học cho sinh viên " + sinhVien.getHoTen() + " - " + sinhVien.getMaSV());
+
+        String maMonHoc;
+        while (true) {
+            System.out.print("Nhập mã môn học: ");
+            maMonHoc = scanner.nextLine();
+            if (sinhVien.timMonHoc(maMonHoc) == null) {
+                break; // Nếu mã môn học không trùng, thoát vòng lặp
+            } else {
+                System.out.println("Sinh viên đã đăng ký môn học với mã này rồi. Vui lòng nhập mã môn học khác.");
+            }
+        }
+
+        System.out.print("Nhập tên môn học: ");
+        String tenMonHoc = scanner.nextLine();
+
+        MonHoc monHoc = new MonHoc(maMonHoc, tenMonHoc);
+        sinhVien.themMonHoc(monHoc);
+        System.out.println("Đã đăng ký môn học thành công cho sinh viên " + sinhVien.getHoTen());
+    }
+
+    private static void nhapDiemChoSinhVien() {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        if (danhSachSinhVien.isEmpty()) {
+            System.out.println("Không có sinh viên nào trong danh sách.");
+            return;
+        }
+
+        // Hiển thị danh sách sinh viên
+        System.out.println("\nDanh sách sinh viên:");
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            System.out.println((i + 1) + ". Lớp: " + sv.getLop() + " - MSSV: " + sv.getMaSV() + " - Tên: " + sv.getHoTen());
+        }
+
+        // Chọn sinh viên
+        System.out.print("Chọn số thứ tự sinh viên để nhập điểm: ");
+        int index = scanner.nextInt() - 1;
+        scanner.nextLine(); // Consume newline left-over
+
+        if (index < 0 || index >= danhSachSinhVien.size()) {
+            System.out.println("Lựa chọn không hợp lệ.");
+            return;
+        }
+
+        SinhVien sinhVien = danhSachSinhVien.get(index);
+        System.out.println("Nhập điểm cho sinh viên " + sinhVien.getHoTen() + " - " + sinhVien.getMaSV());
+
+        List<MonHoc> danhSachMonHoc = sinhVien.getDanhSachMonHoc();
+        if (danhSachMonHoc.isEmpty()) {
+            System.out.println("Sinh viên chưa đăng ký môn học nào.");
+            return;
+        }
+
+        // Hiển thị danh sách môn học của sinh viên
+        System.out.println("\nDanh sách môn học đã đăng ký:");
+        for (int i = 0; i < danhSachMonHoc.size(); i++) {
+            MonHoc monHoc = danhSachMonHoc.get(i);
+            System.out.println((i + 1) + ". Mã môn học: " + monHoc.getMaMonHoc() + " - Tên môn học: " + monHoc.getTenMonHoc() + " - Điểm: " + (monHoc.getDiem() == null ? "null" : monHoc.getDiem()));
+        }
+
+        // Chọn môn học
+        System.out.print("Chọn số thứ tự môn học để nhập điểm: ");
+        int monHocIndex = scanner.nextInt() - 1;
+        scanner.nextLine(); // Consume newline left-over
+
+        if (monHocIndex < 0 || monHocIndex >= danhSachMonHoc.size()) {
+            System.out.println("Lựa chọn không hợp lệ.");
+            return;
+        }
+
+        MonHoc monHoc = danhSachMonHoc.get(monHocIndex);
+        System.out.println("Nhập điểm cho môn học " + monHoc.getTenMonHoc() + " - Mã môn học: " + monHoc.getMaMonHoc());
+
+        System.out.print("Nhập điểm: ");
+        String diemStr = scanner.nextLine();
+        if (diemStr.trim().isEmpty() || diemStr.equalsIgnoreCase("null")) {
+            monHoc.setDiem(null); // Xóa điểm
+        } else {
+            try {
+                Double diem = Double.parseDouble(diemStr);
+                monHoc.setDiem(diem); // Cập nhật điểm
+            } catch (NumberFormatException e) {
+                System.out.println("Điểm không hợp lệ. Vui lòng nhập lại.");
+                return;
+            }
+        }
+
+        System.out.println("Đã cập nhật điểm thành công cho môn học.");
+    }
+
+    private static void hienThiDanhSachSinhVien() {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        if (danhSachSinhVien.isEmpty()) {
+            System.out.println("Không có sinh viên nào trong danh sách.");
+            return;
+        }
+
+        // Các tiêu đề cột và độ rộng
+        String headerFormat = "%-5s %-12s %-15s %-20s %-12s %-10s %-20s %-30sn";
+        String dataFormat = "%-5d %-12s %-15s %-20s %-12s %-10s %-20s %-30sn";
+        String monHocFormat = "        - Mã Môn Học: %-10s | Tên Môn Học: %-20s | Điểm: %s%n";
+
+        // Hiển thị tiêu đề bảng
+        System.out.printf(headerFormat, "STT", "Lớp", "Mã Sinh Viên", "Tên Sinh Viên", "Ngày Sinh", "Giới Tính", "Số Điện Thoại", "Email");
+        System.out.println("-------------------------------------------------------------------------------");
+
+        // Hiển thị dữ liệu sinh viên
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            String ngaySinhStr = sv.getNgaySinh() != null ? sv.getNgaySinh().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "N/A";
+            System.out.printf(dataFormat,
+                    i + 1,
+                    sv.getLop(),
+                    sv.getMaSV(),
+                    sv.getHoTen(),
+                    ngaySinhStr,
+                    sv.getGioiTinh(),
+                    sv.getSoDienThoai(),
+                    sv.getEmail()
+            );
+
+            List<MonHoc> danhSachMonHoc = sv.getDanhSachMonHoc();
+            if (danhSachMonHoc.isEmpty()) {
+                System.out.println("    Không có môn học nào.");
+            } else {
+                System.out.println("    Môn học:");
+                for (MonHoc mh : danhSachMonHoc) {
+                    String diemStr = mh.getDiem() != null ? mh.getDiem().toString() : "null";
+                    System.out.printf(monHocFormat,
+                            mh.getMaMonHoc(),
+                            mh.getTenMonHoc(),
+                            diemStr
+                    );
+                }
+            }
+        }
+    }
+
+
+    private static void xoaSinhVien() {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        if (danhSachSinhVien.isEmpty()) {
+            System.out.println("Không có sinh viên nào để xóa.");
+            return;
+        }
+
+        System.out.println("\nDanh sách sinh viên:");
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            System.out.println((i + 1) + ". " + sv.getHoTen() + " - " + sv.getMaSV() + " - " + sv.getLop());
+        }
+
+        System.out.print("Chọn số thứ tự sinh viên cần xóa: ");
+        int index = scanner.nextInt() - 1;
+        scanner.nextLine(); // Consume newline left-over
+
+        if (index < 0 || index >= danhSachSinhVien.size()) {
+            System.out.println("Lựa chọn không hợp lệ.");
+            return;
+        }
+
+        SinhVien sinhVien = danhSachSinhVien.get(index);
+        quanLySinhVien.xoaSinhVien(sinhVien.getMaSV());
+        System.out.println("Đã xóa sinh viên thành công.");
+    }
+
+    private static void suaSinhVien() {
+        List<SinhVien> danhSachSinhVien = quanLySinhVien.getDanhSachSinhVien();
+        if (danhSachSinhVien.isEmpty()) {
+            System.out.println("Không có sinh viên nào để sửa.");
+            return;
+        }
+
+        System.out.println("\nDanh sách sinh viên:");
+        for (int i = 0; i < danhSachSinhVien.size(); i++) {
+            SinhVien sv = danhSachSinhVien.get(i);
+            System.out.println((i + 1) + ". " + sv.getHoTen() + " - " + sv.getMaSV() + " - " + sv.getLop());
+        }
+
+        System.out.print("Chọn số thứ tự sinh viên cần sửa thông tin: ");
+        int index = scanner.nextInt() - 1;
+        scanner.nextLine(); // Consume newline left-over
+
+        if (index < 0 || index >= danhSachSinhVien.size()) {
+            System.out.println("Lựa chọn không hợp lệ.");
+            return;
+        }
+
+        SinhVien sinhVien = danhSachSinhVien.get(index);
+        System.out.println("Nhập thông tin mới cho sinh viên " + sinhVien.getHoTen() + " - " + sinhVien.getMaSV());
+
+        System.out.print("Nhập họ tên mới (Enter để giữ nguyên): ");
+        String hoTenMoi = scanner.nextLine();
+        if (!hoTenMoi.trim().isEmpty()) sinhVien.setHoTen(hoTenMoi);
+
+        System.out.print("Nhập ngày sinh mới (yyyy-MM-dd, Enter để giữ nguyên): ");
+        String ngaySinhMoi = scanner.nextLine();
+        if (!ngaySinhMoi.trim().isEmpty()) {
+            sinhVien.setNgaySinh(LocalDate.parse(ngaySinhMoi, DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+
+        System.out.print("Nhập lớp mới (Enter để giữ nguyên): ");
+        String lopMoi = scanner.nextLine();
+        if (!lopMoi.trim().isEmpty()) sinhVien.setLop(lopMoi);
+
+        System.out.print("Nhập giới tính mới (Nam/Nữ, Enter để giữ nguyên): ");
+        String gioiTinhMoi = scanner.nextLine();
+        if (!gioiTinhMoi.trim().isEmpty()) sinhVien.setGioiTinh(gioiTinhMoi);
+
+        System.out.print("Nhập số điện thoại mới (Enter để giữ nguyên): ");
+        String soDienThoaiMoi = scanner.nextLine();
+        if (!soDienThoaiMoi.trim().isEmpty()) sinhVien.setSoDienThoai(soDienThoaiMoi);
+
+        System.out.print("Nhập email mới (Enter để giữ nguyên): ");
+        String emailMoi = scanner.nextLine();
+        if (!emailMoi.trim().isEmpty()) sinhVien.setEmail(emailMoi);
+
+        System.out.println("Sửa thông tin sinh viên thành công.");
+
+        System.out.print("Nhập mã môn học cần xóa (Enter nếu không muốn xóa): ");
+        String maMonHocXoa = scanner.nextLine();
+        if (!maMonHocXoa.trim().isEmpty()) {
+            sinhVien.xoaMonHoc(maMonHocXoa);
+            System.out.println("Đã xóa môn học.");
+        }
+    }
+    private static void ghiDanhSachSinhVienVaoFile() {
+        System.out.print("Nhập tên file để ghi danh sách sinh viên (hoặc nhấn Enter để sử dụng mặc định): ");
+        String tenFile = scanner.nextLine();
+        if (tenFile.isEmpty()) {
+            tenFile = FILE_NAME; // Sử dụng tên file mặc định nếu không nhập
+        }
+        quanLySinhVien.ghiDanhSachSinhVienVaoFile(tenFile);
+    }
+
+    private static void docDanhSachSinhVienTuFile() {
+        System.out.print("Nhập tên file để đọc danh sách sinh viên (hoặc nhấn Enter để sử dụng mặc định): ");
+        String tenFile = scanner.nextLine();
+        if (tenFile.isEmpty()) {
+            tenFile = FILE_NAME; // Sử dụng tên file mặc định nếu không nhập
+        }
+        quanLySinhVien.docDanhSachSinhVienTuFile(tenFile);
+    }
+
+
+
+}
